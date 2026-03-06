@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Databases
+  postgres:
+    image: postgres:15-alpine
+    container_name: gesco_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:latest
+    container_name: gesco_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gesco_rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # Caching & Session
+  redis:
+    image: redis:alpine
+    container_name: gesco_redis
+    ports:
+      - "6379:6379"
+
+  # Application Services
+  gateway:
+    build: 
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: gesco_gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_SECRET: laramel_super_secret_jwt_key_2024
+      JWT_EXPIRATION: 7d
+      INVENTORY_SERVICE_URL: http://inventory-service:3001
+    depends_on:
+      - redis
+      - rabbitmq
+
+  inventory-service:
+    build:
+      context: ./services/inventory-service
+      dockerfile: Dockerfile
+    container_name: gesco_inventory_service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gesco_inventory
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_SYNC: "true"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+volumes:
+  postgres_data:
+  mongo_data:

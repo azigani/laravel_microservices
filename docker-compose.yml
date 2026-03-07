@@ -44,6 +44,21 @@ services:
       - "6379:6379"
 
   # Application Services
+  discovery-server:
+    build:
+      context: ./services/discovery-server
+      dockerfile: Dockerfile
+    container_name: gesco_discovery_server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   gateway:
     build: 
       context: ./services/gateway

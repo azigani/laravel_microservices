@@ -1,0 +1,17 @@
+# ====================================================================
+# GESCO: service-notification specific configuration
+# ====================================================================
+server:
+  port: 8084
+
+spring:
+  application:
+    name: service-notification
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gesco_notification}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false

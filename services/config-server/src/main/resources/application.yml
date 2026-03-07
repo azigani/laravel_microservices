@@ -1,0 +1,23 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          # Local config repo path (relative to project root or absolute)
+          # This folder holds all the YAML configs for each microservice
+          uri: file://${user.home}/config-repo
+          default-label: main
+          search-paths: '**'
+
+# Register with Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true

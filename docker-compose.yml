@@ -55,9 +55,33 @@ services:
       JWT_SECRET: laramel_super_secret_jwt_key_2024
       JWT_EXPIRATION: 7d
       INVENTORY_SERVICE_URL: http://inventory-service:3001
+      IDENTITY_SERVICE_URL: http://identity-service:8000
     depends_on:
       - redis
       - rabbitmq
+      - identity-service
+
+  identity-service:
+    build:
+      context: ./services/identity-service
+      dockerfile: Dockerfile
+    container_name: gesco_identity_service
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: "IdentityService"
+      APP_ENV: local
+      APP_KEY: base64:mPCOnBo3fP81BQtk12rToOHAFG/JxnAssBhU7jI/yzI=
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: gesco_identity
+      DB_USERNAME: admin
+      DB_PASSWORD: password
+      JWT_SECRET: laramel_super_secret_jwt_key_2024
+    depends_on:
+      - postgres
 
   inventory-service:
     build:

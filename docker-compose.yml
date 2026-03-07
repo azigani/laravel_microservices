@@ -97,8 +97,28 @@ services:
       DB_PORT: 5432
       DB_NAME: gesco_inventory
       DB_USER: admin
+      DB_SYNC: "true"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  sales-service:
+    build:
+      context: ./services/sales-service
+      dockerfile: Dockerfile
+    container_name: gesco_sales_service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gesco_sales
+      DB_USER: admin
       DB_PASSWORD: password
       DB_SYNC: "true"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      JWT_SECRET: laramel_super_secret_jwt_key_2024
     depends_on:
       - postgres
       - rabbitmq

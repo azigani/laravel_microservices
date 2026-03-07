@@ -1,0 +1,22 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SalesModule } from './sales.module';
+
+@Module({
+    imports: [
+        TypeOrmModule.forRoot({
+            type: 'postgres',
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT, 10) || 5432,
+            username: process.env.DB_USER || 'admin',
+            password: process.env.DB_PASSWORD || 'password',
+            database: process.env.DB_NAME || 'gesco_sales',
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: process.env.DB_SYNC === 'true',
+        }),
+        SalesModule,
+    ],
+    controllers: [],
+    providers: [],
+})
+export class AppModule { }

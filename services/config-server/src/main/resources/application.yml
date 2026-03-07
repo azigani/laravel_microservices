@@ -4,17 +4,16 @@ server:
 spring:
   application:
     name: config-server
+  profiles:
+    active: native  # Uses classpath resources instead of a Git repository
   cloud:
     config:
       server:
-        git:
-          # Local config repo path (relative to project root or absolute)
-          # This folder holds all the YAML configs for each microservice
-          uri: file://${user.home}/config-repo
-          default-label: main
-          search-paths: '**'
+        native:
+          # Configs are inside src/main/resources/config/
+          search-locations: classpath:/config/
 
-# Register with Eureka
+# Register with Eureka discovery server
 eureka:
   client:
     serviceUrl:

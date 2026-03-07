@@ -1,19 +1,24 @@
 # ====================================================================
 # GESCO: Global Shared Configuration
-# These properties are merged into ALL microservices at startup.
+# Automatically merged into ALL microservices that consume this server.
 # Service-specific files (e.g. service-sales.yml) can override these.
 # ====================================================================
 spring:
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
+    host: ${RABBITMQ_HOST:rabbitmq}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASS:guest}
 
-# Eureka registration (all services will use this)
+# Eureka registration (all services inherit this)
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka}
   instance:
     prefer-ip-address: true
+
+# Logging standard for all services (JSON-ready)
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{correlationId}] %-5level %logger{36} - %msg%n"

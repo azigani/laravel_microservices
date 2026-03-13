@@ -1,12 +1,10 @@
 package com.gesco.payment.core.application.usecase;
 
+import com.gesco.payment.core.application.port.output.PaymentProvider;
 import com.gesco.payment.core.domain.model.Invoice;
 import com.gesco.payment.core.domain.model.Payment;
 import com.gesco.payment.infrastructure.adapters.persistence.InvoiceRepository;
 import com.gesco.payment.infrastructure.adapters.persistence.PaymentRepository;
-import com.stripe.Stripe;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Charge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,10 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,17 +25,10 @@ public class PaymentService {
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
     private final RabbitTemplate rabbitTemplate;
-
-    @Value("${payment.stripe.secret-key}")
-    private String stripeSecretKey;
+    private final List<PaymentProvider> paymentProviders;
 
     @Value("${payment.rabbitmq.payment-exchange}")
     private String paymentExchange;
-
-    @PostConstruct
-    public void init() {
-        Stripe.apiKey = stripeSecretKey;
-    }
 
     @Transactional
     public Invoice generateInvoice(Long saleId, String customerId, BigDecimal amount, String currency) {
@@ -52,11 +42,21 @@ public class PaymentService {
                 .issueDate(LocalDateTime.now())
                 .dueDate(LocalDateTime.now().plusDays(30))
                 .build();
-        return invoiceRepository.save(invoice);
+        invoice = invoiceRepository.save(invoice);
+
+        // Audit Logging
+        sendAuditLog("INVOICE_GENERATED", "Invoice", invoice.getId().toString(), null, invoice);
+
+        return invoice;
+    }
+    @Transactional(readOnly = true)
+    public Invoice getInvoiceBySaleId(Long saleId) {
+        return invoiceRepository.findBySaleId(saleId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found for saleId: " + saleId));
     }
 
     @Transactional
-    public Payment processPayment(Long invoiceId, String sourceToken) {
+    public Payment processPayment(Long invoiceId, String paymentMethod, Map<String, Object> params) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
@@ -64,41 +64,56 @@ public class PaymentService {
             throw new RuntimeException("Invoice is already paid");
         }
 
-        Payment payment = Payment.builder()
-                .invoice(invoice)
-                .amount(invoice.getAmount())
-                .currency(invoice.getCurrency())
-                .paymentMethod("STRIPE")
-                .status(Payment.PaymentStatus.PENDING)
-                .paymentDate(LocalDateTime.now())
-                .build();
+        // Audit - Initiation
+        sendAuditLog("PAYMENT_INITIATED", "Payment", null, null, Map.of(
+                "invoiceId", invoiceId,
+                "paymentMethod", paymentMethod
+        ));
+
+        // Sélection du provider
+        PaymentProvider provider = paymentProviders.stream()
+                .filter(p -> p.getProviderName().equalsIgnoreCase(paymentMethod))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported payment method: " + paymentMethod));
+
+        Payment payment = provider.process(invoice, params);
         payment = paymentRepository.save(payment);
 
-        try {
-            Map<String, Object> chargeParams = new HashMap<>();
-            // Stripe deals in cents
-            chargeParams.put("amount", invoice.getAmount().multiply(new BigDecimal(100)).intValue());
-            chargeParams.put("currency", invoice.getCurrency());
-            chargeParams.put("source", sourceToken); // e.g., 'tok_visa' for testing
-            chargeParams.put("description", "Payment for Invoice: " + invoice.getInvoiceNumber());
+        if (payment.getStatus() == Payment.PaymentStatus.SUCCESS) {
+            invoice.setStatus(Invoice.InvoiceStatus.PAID);
+            invoice.setPaidDate(LocalDateTime.now());
+            invoiceRepository.save(invoice);
 
-            Charge charge = Charge.create(chargeParams);
-
-            payment.setTransactionId(charge.getId());
-            if ("succeeded".equals(charge.getStatus())) {
-                payment.setStatus(Payment.PaymentStatus.SUCCESS);
-                invoice.setStatus(Invoice.InvoiceStatus.PAID);
-                invoice.setPaidDate(LocalDateTime.now());
-                invoiceRepository.save(invoice);
-            } else {
-                payment.setStatus(Payment.PaymentStatus.FAILED);
-            }
-        } catch (StripeException e) {
-            log.error("Stripe payment failed", e);
-            payment.setStatus(Payment.PaymentStatus.FAILED);
-            payment.setTransactionId(e.getStripeError() != null ? e.getStripeError().getCode() : "ERROR");
+            // Notify payment completed
+            rabbitTemplate.convertAndSend(paymentExchange, "payment.completed", Map.of(
+                    "invoiceId", invoice.getId(),
+                    "saleId", invoice.getSaleId(),
+                    "status", "SUCCESS",
+                    "transactionId", payment.getTransactionId()
+            ));
+            
+            sendAuditLog("PAYMENT_SUCCESS", "Payment", payment.getId().toString(), null, payment);
+        } else {
+            sendAuditLog("PAYMENT_FAILED", "Payment", payment.getId().toString(), null, payment);
         }
 
-        return paymentRepository.save(payment);
+        return payment;
+    }
+
+    private void sendAuditLog(String action, String resource, String resourceId, Object before, Object after) {
+        try {
+            rabbitTemplate.convertAndSend("audit.exchange", "audit.event.payment", Map.of(
+                    "action", action,
+                    "service", "service-payment",
+                    "resource", resource,
+                    "resourceId", resourceId != null ? resourceId : "N/A",
+                    "before", before != null ? before : Map.of(),
+                    "after", after != null ? after : Map.of(),
+                    "userId", "SYSTEM",
+                    "timestamp", LocalDateTime.now().toString()
+            ));
+        } catch (Exception e) {
+            log.error("Failed to send audit log for action: {}", action, e);
+        }
     }
 }

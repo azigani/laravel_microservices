@@ -244,6 +244,26 @@ services:
       - rabbitmq
       - discovery-server
 
+  service-payment:
+    build:
+      context: ./services/service-payment
+      dockerfile: Dockerfile
+    container_name: gesco_payment_service
+    ports:
+      - "8087:8087"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/gesco_payment
+      DB_USER: admin
+      DB_PASS: password
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+      STRIPE_SECRET_KEY: sk_test_fake_key_for_dev
+    depends_on:
+      - postgres
+      - rabbitmq
+      - discovery-server
+
 volumes:
   postgres_data:
   mongo_data:

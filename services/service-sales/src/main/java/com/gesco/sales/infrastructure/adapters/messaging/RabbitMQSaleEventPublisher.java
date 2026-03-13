@@ -18,5 +18,16 @@ public class RabbitMQSaleEventPublisher implements SaleEventPublisher {
     public void publishSaleCreated(Sale sale) {
         SaleCreatedEventDto eventDto = saleMapper.toEventDto(sale);
         rabbitTemplate.convertAndSend(RabbitMQConfig.SALES_EXCHANGE, "sale.created", eventDto);
+
+        // Audit Event
+        rabbitTemplate.convertAndSend("audit.exchange", "audit.event.sale",
+                java.util.Map.of(
+                        "action", "CREATE_SALE",
+                        "service", "service-sales",
+                        "resource", "Sale",
+                        "resourceId", sale.getId().toString(),
+                        "after", eventDto,
+                        "userId", "SYSTEM" // A remplacer par le vrai userId si dispo dans le contexte de securité
+                ));
     }
 }

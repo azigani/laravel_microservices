@@ -227,6 +227,23 @@ services:
       - minio
       - discovery-server
 
+  service-audit:
+    build:
+      context: ./services/service-audit
+      dockerfile: Dockerfile
+    container_name: gesco_audit_service
+    ports:
+      - "8086:8086"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/gesco_audit
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - discovery-server
+
 volumes:
   postgres_data:
   mongo_data:

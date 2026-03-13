@@ -35,6 +35,21 @@ class AuthenticateUserUseCase
             throw new \Exception("Could not create token");
         }
 
+        // Audit Log
+        try {
+            \Illuminate\Support\Facades\Http::post('http://service-audit:8086/api/audit', [
+                'userId' => (string)$user->id,
+                'action' => 'USER_LOGIN',
+                'service' => 'identity-service',
+                'resource' => 'User',
+                'resourceId' => (string)$user->id,
+                'metadata' => ['email' => $email]
+            ]);
+        } catch (\Exception $e) {
+            // Log error but don't break authentication
+            \Illuminate\Support\Facades\Log::error("Failed to send audit log: " . $e->getMessage());
+        }
+
         return [
             'user' => UserDTO::fromEntity($user),
             'token' => $token

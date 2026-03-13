@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: service-audit
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: false
+  data:
+    mongodb:
+      uri: mongodb://mongodb:27017/gesco_audit
+  rabbitmq:
+    host: rabbitmq
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+
+audit:
+  rabbitmq:
+    queue: audit.queue
+    exchange: audit.exchange
+    routing-key: audit.event.#
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

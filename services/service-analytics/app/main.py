@@ -25,49 +25,66 @@ async def health():
 @app.get("/stats")
 async def get_stats():
     orders_count = await db.sales_metrics.count_documents({})
-    # Basic aggregation example
+    payments_count = await db.payments_log.count_documents({"status": "SUCCESS"})
+    
+    # Revenue aggregation
     pipeline = [
         {"$group": {"_id": None, "total_revenue": {"$sum": "$totalAmount"}}}
     ]
     cursor = db.sales_metrics.aggregate(pipeline)
-    revenue_list = await cursor.to_list(length=1)
+    sale_revenue_list = await cursor.to_list(length=1)
+    
+    payment_pipeline = [
+        {"$match": {"status": "SUCCESS"}},
+        {"$group": {"_id": None, "total_paid": {"$sum": "$amount"}}}
+    ]
+    payment_cursor = db.payments_log.aggregate(payment_pipeline)
+    payment_revenue_list = await payment_cursor.to_list(length=1)
     
     return {
         "total_orders": orders_count,
-        "total_revenue": revenue_list[0]["total_revenue"] if revenue_list else 0
+        "total_payments": payments_count,
+        "potential_revenue": sale_revenue_list[0]["total_revenue"] if sale_revenue_list else 0,
+        "confirmed_revenue": payment_revenue_list[0]["total_paid"] if payment_revenue_list else 0
     }
 
 async def process_message(message: aio_pika.IncomingMessage):
     async with message.process():
         event = json.loads(message.body.decode())
-        event_name = message.routing_key
-        print(f" [Analytics] Processing {event_name}: {event}")
+        routing_key = message.routing_key
+        print(f" [Analytics] Processing event {routing_key}")
         
-        # Store event in MongoDB for long-term analytics
-        await db.events_log.insert_one({
-            "event_name": event_name,
-            "payload": event,
-            "processed_at": asyncio.get_event_loop().time()
+        # Store all events for audit/history
+        await db.events_history.insert_one({
+            "type": routing_key,
+            "data": event,
+            "received_at": asyncio.get_event_loop().time()
         })
         
-        if event_name == "sale.created":
+        if routing_key == "sale.created":
             await db.sales_metrics.insert_one(event)
-            print(f" [Analytics] Metric recorded for sale {event.get('saleId')}")
+        elif routing_key == "payment.completed":
+            await db.payments_log.insert_one(event)
+            print(f" [Analytics] Confirmed payment recorded for Sale {event.get('saleId')}")
 
 async def consume_rabbitmq():
     connection = await aio_pika.connect_robust(RABBITMQ_URL)
     channel = await connection.channel()
 
-    # Déclaration de la queue et de l'échange
-    exchange = await channel.declare_exchange('sales.exchange', aio_pika.ExchangeType.TOPIC)
+    # Sales Exchange
+    sales_exchange = await channel.declare_exchange('sales.exchange', aio_pika.ExchangeType.TOPIC)
+    
+    # Payment Exchange
+    payment_exchange = await channel.declare_exchange('payment.exchange', aio_pika.ExchangeType.TOPIC)
+    
     queue = await channel.declare_queue('analytics_queue', durable=True)
     
-    await queue.bind(exchange=exchange, routing_key='sale.created')
+    await queue.bind(exchange=sales_exchange, routing_key='sale.created')
+    await queue.bind(exchange=payment_exchange, routing_key='payment.completed')
 
-    print(' [Analytics] Waiting for events (sale.created). To exit press CTRL+C')
+    print(' [Analytics] Waiting for events (sale.created, payment.completed)...')
     await queue.consume(process_message)
 
 @app.on_event("startup")
 async def startup_event():
-    # Lancement du consommateur en tâche de fond
     asyncio.create_task(consume_rabbitmq())

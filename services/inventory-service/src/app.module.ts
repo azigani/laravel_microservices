@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
 import { StockModule } from './stock/stock.module';
+import { EurekaService } from './eureka.service';
 
 @Module({
   imports: [
@@ -29,5 +30,6 @@ import { StockModule } from './stock/stock.module';
     ProductModule,
     StockModule,
   ],
+  providers: [EurekaService],
 })
 export class AppModule { }

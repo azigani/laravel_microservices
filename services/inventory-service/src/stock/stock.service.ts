@@ -42,4 +42,15 @@ export class StockService {
 
         return this.stockRepo.save(stock);
     }
+
+    async checkAndEmitAlert(productId: number) {
+        const stock = await this.findByProductId(productId);
+        const ALERT_THRESHOLD = 5;
+
+        if (stock.quantity <= ALERT_THRESHOLD) {
+            console.warn(`LOW STOCK ALERT: Product ${productId} is at ${stock.quantity}`);
+            // In a real wahou project, we would emit to another exchange here
+            // this.client.emit('stock.low', { productId, quantity: stock.quantity });
+        }
+    }
 }

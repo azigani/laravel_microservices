@@ -17,6 +17,8 @@ public class Sale {
     private UUID id;
     private String customerId;
     private BigDecimal totalAmount;
+    private String status; // PENDING, COMPLETED, CANCELLED
+
     private LocalDateTime createdAt;
     private SaleStatus status;
 

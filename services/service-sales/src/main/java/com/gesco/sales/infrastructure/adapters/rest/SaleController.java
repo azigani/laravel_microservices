@@ -27,7 +27,14 @@ public class SaleController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    private final com.gesco.sales.core.application.usecase.CancelSaleUseCase cancelSaleUseCase;
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<SaleResponseDto> cancelSale(@PathVariable UUID id) {
+        SaleResponseDto response = cancelSaleUseCase.execute(id);
+        return ResponseEntity.ok(response);
+    }
+
     public ResponseEntity<SaleResponseDto> getSale(@PathVariable UUID id) {
         return saleRepository.findById(id)
                 .map(saleMapper::toResponseDto)

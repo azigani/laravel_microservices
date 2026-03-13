@@ -1,156 +1,91 @@
-# 🚀 GESCO ERP - Microservices Architecture
+# GESCO Enterprise ERP - Microservices Ecosystem
 
-> **Gestion Commerciale Complète** — Enterprise-grade ERP system built with a polyglot microservices architecture.
+Bienvenue dans le projet **GESCO**, un système ERP de classe entreprise ("Système Wahou") conçu avec une architecture microservices moderne, scalable et hautement disponible.
 
----
+## 🚀 Vue d'ensemble de l'Architecture
 
-## 📐 Architecture Overview
+Le système est composé de plusieurs microservices polyglottes (Spring Boot, NestJS, Laravel, FastAPI) communiquant via des protocoles synchrones (Feign/REST) et asynchrones (RabbitMQ).
 
-```
-                    ┌─────────────────┐
-                    │   API Gateway   │ (NestJS - port 3000)
-                    │   JWT + Proxy   │
-                    └───────┬─────────┘
-                            │
-         ┌──────────────────┼──────────────────────┐
-         │                  │                      │
-  ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼───────────┐
-  │  Identity   │   │  Inventory  │   │   Spring Boot Cloud   │
-  │  (Laravel)  │   │  (NestJS)   │   │  Sales │ Notif │ GED  │
-  │  port 8000  │   │  port 3001  │   │  8083  │ 8084  │ 8085 │
-  └──────┬──────┘   └──────┬──────┘   └───────────┬───────────┘
-         │                  │                      │
-         └──────────────────┼──────────────────────┘
-                            │
-         ┌──────────────────┼──────────────────────┐
-         │                  │                      │
-  ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼──────┐
-  │  PostgreSQL │   │  RabbitMQ   │   │  MinIO (S3)      │
-  │  port 5432  │   │  port 5672  │   │  port 9000/9001  │
-  └─────────────┘   └─────────────┘   └──────────────────┘
-```
-
-### Infrastructure Services
-| Service | Technology | Port | Role |
-|---------|-----------|------|------|
-| **Discovery Server** | Spring Cloud Eureka | 8761 | Service registry & discovery |
-| **Config Server** | Spring Cloud Config | 8888 | Centralized configuration (native profile) |
-
-### Business Services
-| Service | Technology | Port | Role |
-|---------|-----------|------|------|
-| **Identity Service** | Laravel (PHP) | 8000 | Auth, users, roles, JWT |
-| **Gateway** | NestJS | 3000 | API proxy, JWT validation, routing |
-| **Inventory Service** | NestJS + TypeORM | 3001 | Products, categories, stock |
-| **Sales Service** | Spring Boot + JPA | 8083 | Sales, invoicing, events |
-| **Notification Service** | Spring Boot + RabbitMQ | 8084 | Email, SMS, push notifications |
-| **Document Service (GED)** | Spring Boot + JasperReports | 8085 | Folders, documents, versioning, PDF |
+### Services Coeur
+1.  **Identity Service (Laravel)** : Gestion des utilisateurs, authentification JWT, et rôles.
+2.  **Sales Service (Spring Boot)** : Logique métier des ventes, gestion des commandes.
+3.  **Inventory Service (NestJS)** : Gestion des stocks, produits et catégories.
+4.  **Document GED (Spring Boot)** : Gestion Electronique de Documents avec stockage objet (MinIO).
+5.  **Analytics Service (FastAPI)** : Analyse des données de vente en temps réel (MongoDB).
+6.  **Notification Service (Spring Boot)** : Envoi d'emails et alertes système.
 
 ### Infrastructure
-| Service | Technology | Port | Role |
-|---------|-----------|------|------|
-| **PostgreSQL** | PostgreSQL 15 | 5432 | Relational database |
-| **MongoDB** | MongoDB | 27017 | Document storage (analytics) |
-| **RabbitMQ** | RabbitMQ | 5672/15672 | Async messaging |
-| **Redis** | Redis | 6379 | Caching & sessions |
-| **MinIO** | MinIO (S3) | 9000/9001 | File storage (GED) |
+-   **Discovery Server (Eureka)** : Annuaire dynamique des services.
+-   **Config Server** : Centralisation des configurations.
+-   **API Gateway (NestJS)** : Point d'entrée unique, routage et sécurité.
+-   **Zipkin** : Tracing distribué pour la visibilité de bout-en-bout.
 
 ---
 
-## 🏗️ Architecture Pattern: Clean Architecture + DDD
+## 🛠️ Guide d'Installation (Étape par Étape)
 
-All business services follow the same layered structure:
+### 1. Pré-requis
+-   **Docker & Docker Compose** (RECOMMANDÉ)
+-   Java 21+, Node.js 20+, PHP 8.2+, Python 3.11+ (si vous lancez hors Docker)
+-   Client Git
 
-```
-service-*/
-├── core/
-│   ├── domain/
-│   │   ├── model/       # Entities (pure business logic, no framework)
-│   │   └── port/        # Interfaces (repositories, storage, events)
-│   └── application/
-│       ├── dto/          # Request/Response DTOs
-│       └── usecase/      # Business use cases
-└── infrastructure/
-    ├── adapters/
-    │   ├── persistence/  # JPA entities, repositories, adapters
-    │   ├── messaging/    # RabbitMQ publishers/listeners
-    │   ├── storage/      # MinIO adapter
-    │   └── rest/         # REST controllers
-    └── config/           # Spring beans, RabbitMQ, MinIO configs
-```
-
----
-
-## 🔄 Inter-Service Communication
-
-### Async (Event-Driven via RabbitMQ)
-- `sale.created` → **Notification Service** (sends confirmation)
-- `sale.created` → **Document Service** (generates PDF invoice via JasperReports)
-
-### Sync (REST via Gateway)
-- All external API calls go through the **Gateway** (`http://localhost:3000`)
-- Gateway proxies to internal services and validates JWT
-
----
-
-## 🚀 Quick Start
-
+### 2. Clonage et Configuration
 ```bash
-# 1. Clone the project
 git clone https://github.com/azigani/laravel_microservices.git
-cd laravel_microservices
-
-# 2. Start all services
-docker-compose up -d
-
-# 3. Access services
-# Gateway:        http://localhost:3000
-# Eureka:         http://localhost:8761
-# Config Server:  http://localhost:8888
-# RabbitMQ UI:    http://localhost:15672 (guest/guest)
-# MinIO Console:  http://localhost:9001 (minioadmin/minioadmin)
+cd laramel_microservices
 ```
+
+### 3. Lancement avec CLI "Expert" (Recommandé)
+Pour une expérience professionnelle, utilisez le script de gestion fourni :
+
+**Windows (cmd/PowerShell) :**
+```bash
+./gesco.bat up
+```
+
+**Linux / Mac / Git Bash :**
+```bash
+chmod +x gesco.sh
+./gesco.sh up
+```
+
+#### Commandes CLI disponibles :
+- `up` : Démarre tous les services en arrière-plan.
+- `down` : Arrête et supprime les conteneurs.
+- `build` : Reconstruit les images Docker.
+- `logs` : Affiche les logs en temps réel.
+- `status` : Affiche l'état de santé de chaque service.
+- `doctor` (sh uniquement) : Vérifie vos pré-requis système.
 
 ---
 
-## 🌿 Git Workflow (Team Standards)
-
-```
-main ─── dev ─── feature/xxx
-              └── feature/yyy
-```
-
-1. **Branch** from `dev`: `git checkout -b feature/my-feature`
-2. **Commit** with Conventional Commits: `feat(sales): add invoice generation`
-3. **Push** feature branch: `git push -u origin feature/my-feature`
-4. **Merge** into `dev`: `git checkout dev && git merge feature/my-feature`
-5. **Push** `dev`: `git push origin dev`
-
-### Commit Convention
-| Prefix | Usage |
-|--------|-------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Code restructure |
-| `docs` | Documentation |
-| `chore` | Build/config changes |
+### 4. Accès aux Tableaux de Bord
+-   **Eureka (Discovery)** : [http://localhost:8761](http://localhost:8761) - *Vérifiez que tous les services sont UP.*
+-   **Zipkin (Tracing)** : [http://localhost:9411](http://localhost:9411) - *Suivez vos requêtes.*
+-   **RabbitMQ Management** : [http://localhost:15672](http://localhost:15672) (guest/guest)
+-   **MinIO Console** : [http://localhost:9001](http://localhost:9001) (minioadmin/minioadmin)
 
 ---
 
-## 📁 Databases
+## 🔗 Flux de Communication (Démonstration)
 
-| Database | Service | Engine |
-|----------|---------|--------|
-| `gesco_identity` | Identity Service | PostgreSQL |
-| `gesco_inventory` | Inventory Service | PostgreSQL |
-| `gesco_sales` | Sales Service | PostgreSQL |
-| `gesco_document` | Document Service (GED) | PostgreSQL |
-| `gesco_notification` | Notification Service | PostgreSQL |
+### Test Synchrone (Feign + Eureka)
+Appelez le point de terminaison de test dans Sales via la Gateway :
+`GET http://localhost:3000/sales/api/system/status`
+> **Effet** : Sales demande dynamiquement à Eureka l'adresse de `Inventory` et `Document`, les interroge, et vous renvoie un rapport complet.
 
-All databases are auto-created by `docker/postgres/init.sql`.
+### Test Asynchrone (RabbitMQ)
+1. Créez une vente via `POST http://localhost:3000/sales/api/sales`.
+2. Vérifiez les logs de `service-notification` et `service-analytics`.
+> **Effet** : La vente déclenche un événement `sale.created`. Notification prépare un email et Analytics enregistre la métrique dans MongoDB.
 
 ---
 
-## 📝 License
+## 🛡️ Sécurité & Tracing
+Toutes les requêtes passent par la **Gateway** qui vérifie le JWT (via Identity Service) avant de router la requête. Chaque saut entre services injecte des headers de tracing injectés par **Micrometer/Brave**, visibles instantanément dans Zipkin.
 
-Proprietary — GESCO ERP by Laramel.
+---
+
+## 📈 Développement & Workflow Git
+-   **Branche principale** : `dev` (Intégration continue).
+-   **Features** : Toujours créer une branche `feature/nom-de-la-feature` et fusionner vers `dev` après validation.

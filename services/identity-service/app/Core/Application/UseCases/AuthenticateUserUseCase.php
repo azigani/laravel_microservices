@@ -25,6 +25,10 @@ class AuthenticateUserUseCase
             throw new \Exception("Invalid credentials");
         }
 
+        if (!$user->is_active) {
+            throw new \Exception("Your account is deactivated");
+        }
+
         $token = $this->authService->authenticate($email, $password);
         
         if (!$token) {

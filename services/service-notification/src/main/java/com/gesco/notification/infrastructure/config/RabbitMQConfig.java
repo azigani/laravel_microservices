@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String NOTIFICATION_QUEUE = "notification_queue";
-    public static final String TOPIC_EXCHANGE = "amq.topic";
+    public static final String SALES_EXCHANGE = "sales.exchange";
 
     @Bean
     public Queue notificationQueue() {
@@ -19,8 +19,8 @@ public class RabbitMQConfig {
     @Bean
     public Binding binding(Queue notificationQueue) {
         return BindingBuilder.bind(notificationQueue)
-                .to(new TopicExchange(TOPIC_EXCHANGE))
-                .with("order.placed");
+                .to(new TopicExchange(SALES_EXCHANGE))
+                .with("sale.created");
     }
 
     @Bean

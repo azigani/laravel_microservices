@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 public class RabbitMQOrderListener {
     private final ProcessOrderNotificationUseCase processOrderNotificationUseCase;
 
-    @RabbitListener(queues = "notification_queue")
-    public void handleOrderPlaced(OrderPlacedEventDto event) {
-        log.info("[Spring Boot Notification] Received order.placed: {}", event.getOrderId());
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleSaleCreated(SaleCreatedEventDto event) {
+        log.info("[Notification Service] Received sale.created event for Sale ID: {}", event.getSaleId());
         processOrderNotificationUseCase.execute(event);
     }
 }

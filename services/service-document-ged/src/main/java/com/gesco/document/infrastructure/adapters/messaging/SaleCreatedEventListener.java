@@ -20,19 +20,19 @@ public class SaleCreatedEventListener {
 
     private final GenerateInvoiceUseCase generateInvoiceUseCase;
 
-    @RabbitListener(queues = "document.sale.created.queue")
-    public void onSaleCreated(Map<String, Object> event) {
-        log.info("Received sale.created event: {}", event);
+    @RabbitListener(queues = RabbitMQConfig.DOCUMENT_QUEUE)
+    public void onSaleCreated(SaleCreatedEventDto event) {
+        log.info("Received sale.created event for sale: {}", event.getSaleId());
 
         try {
-            UUID saleId = UUID.fromString((String) event.get("id"));
-            String customerName = (String) event.getOrDefault("customerName", "Client inconnu");
-            double totalAmount = event.get("totalAmount") != null
-                    ? Double.parseDouble(event.get("totalAmount").toString())
-                    : 0.0;
+            UUID saleId = event.getSaleId();
+            // In a real scenario, we might call service-identity via Feign to get the customer name
+            // For now we use the customerId as a placeholder or name
+            String customerName = "Client ID: " + event.getCustomerId();
+            double totalAmount = event.getTotalAmount() != null ? event.getTotalAmount().doubleValue() : 0.0;
 
             generateInvoiceUseCase.execute(saleId, customerName, totalAmount);
-            log.info("Invoice successfully generated for sale: {}", saleId);
+            log.info("Invoice successfully triggered for sale: {}", saleId);
 
         } catch (Exception e) {
             log.error("Failed to process sale.created event: {}", e.getMessage(), e);

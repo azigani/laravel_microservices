@@ -50,24 +50,21 @@ async def process_message(message: aio_pika.IncomingMessage):
             "processed_at": asyncio.get_event_loop().time()
         })
         
-        if event_name == "order.placed":
+        if event_name == "sale.created":
             await db.sales_metrics.insert_one(event)
-            print(f" [Analytics] Metric recorded for order {event.get('orderId')}")
+            print(f" [Analytics] Metric recorded for sale {event.get('saleId')}")
 
 async def consume_rabbitmq():
     connection = await aio_pika.connect_robust(RABBITMQ_URL)
     channel = await connection.channel()
 
-    # Déclaration de la queue
-    queue = await channel.declare_queue('analytics_queue', durable=False)
+    # Déclaration de la queue et de l'échange
+    exchange = await channel.declare_exchange('sales.exchange', aio_pika.ExchangeType.TOPIC)
+    queue = await channel.declare_queue('analytics_queue', durable=True)
     
-    # Liaison aux événements via l'échange par défaut ou un échange spécifique
-    # Ici on suppose que le sales-service émet sur l'exchange amq.topic par exemple
-    # ou directement via routing key si exchange par défaut
-    await queue.bind(exchange='amq.topic', routing_key='order.placed')
-    await queue.bind(exchange='amq.topic', routing_key='stock.reserved')
+    await queue.bind(exchange=exchange, routing_key='sale.created')
 
-    print(' [Analytics] Waiting for events. To exit press CTRL+C')
+    print(' [Analytics] Waiting for events (sale.created). To exit press CTRL+C')
     await queue.consume(process_message)
 
 @app.on_event("startup")

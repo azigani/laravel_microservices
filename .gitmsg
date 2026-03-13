@@ -1,9 +1,7 @@
-feat(discovery): enable distributed tracing and smart discovery
+feat(integration): finalize inter-service communication and observability
 
-- Add Distributed Tracing (Micrometer + Zipkin) to all Java services
-- Add OpenFeign for smart service discovery via Eureka
-- Add Resilience4j circuit breakers for inter-service calls
-- Add Actuator health and metrics endpoints
-- Centralize all tracing and shared configurations in Config Server
-- Add Zipkin to docker-compose
-- Implement SystemCheckController in service-sales
+- Registered inventory-service (NestJS) with Eureka using eureka-js-client
+- Upgraded service-notification to Spring Boot 3.4 and enabled discovery
+- Finalized RabbitMQ event chain between Sales and Notifications
+- Ensured all services use centralized Config Server imports
+- Merged and pushed all discovery and communication fixes to dev

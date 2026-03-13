@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: service-pricing
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gesco_pricing
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8086
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

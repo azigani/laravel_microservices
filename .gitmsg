@@ -1,0 +1,8 @@
+feat(integration): wire all services together
+
+- Add service-sales and service-notification to docker-compose
+- Update init.sql to create all 5 databases
+- Wire service-sales to Eureka + Config Server (pom.xml + application.yml)
+- Create Gateway proxy controllers for Sales, Document, Analytics
+- Add new service URLs to Gateway environment
+- Write comprehensive README with architecture diagram

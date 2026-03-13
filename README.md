@@ -1,96 +1,156 @@
-<<<<<<< HEAD
-# GESCO - Gestion Commerciale Microservices
+# 🚀 GESCO ERP - Microservices Architecture
 
-Ce projet est une architecture microservices polyglotte et robuste pour un système ERP GESCO.
-
-## 🚀 Écosystème Polyglotte
-- **Identity Service** : Laravel (PHP) - Authentification & JWT.
-- **Gateway** : NestJS (TypeScript) - Proxy & Sécurité.
-- **Inventory Service** : NestJS (TypeScript) - Gestion des stocks (DDD).
-- **Sales Service** : NestJS (TypeScript) - Gestion des commandes & Saga Pattern (DDD).
-- **Analytics Service** : Python (FastAPI) - Statistiques temps-réel & MongoDB.
-- **Notification Service** : Go (Gin) - [À VENIR] Mails & Temps réel.
-- **Document Service** : Python (FastAPI) - [À VENIR] Génération de PDF & Rapports.
-
-## 🛠️ Installation & Démarrage
-1. **Prérequis** : Docker & Docker Compose.
-2. **Lancement** :
-   ```bash
-   docker-compose up -d --build
-   ```
-3. **Services** :
-   - Gateway : `http://localhost:3000`
-   - Sales : `http://localhost:3002`
-   - Analytics : `http://localhost:8001`
-
-## 📊 Flux Événementiel (RabbitMQ)
-Les microservices communiquent de manière asynchrone via des événements (`order.placed`, `stock.reserved`, etc.) pour garantir la haute disponibilité et la cohérence éventuelle.
-
-## 🏗️ Architecture
-Chaque service suit les principes de la **Clean Architecture** et du **DDD** (Domain-Driven Design) pour assurer la testabilité et la maintenance.
-=======
-# GESCO Microservices Project
-
-Ce projet est une architecture microservices pour un ERP (Gestion Commerciale - GESCO), utilisant **Laravel** pour l'identité et **NestJS** pour le Gateway et les stocks.
-
-## Architecture
-- **API Gateway (NestJS)** : Point d'entrée unique, gère le proxying et la validation JWT.
-- **Identity Service (Laravel)** : Gère l'authentification (JWT), les utilisateurs et les rôles. Architecture Clean & DDD.
-- **Inventory Service (NestJS)** : Gère les catégories, produits et stocks.
-
-## Pré-requis
-- Docker & Docker Compose
-- PHP 8.3+ (pour le développement local de l'Identity Service)
-- Node.js 20+ (pour le développement local du Gateway/Inventory)
-
-## Installation Rapide (Docker)
-
-1. **Cloner le projet**
-2. **Configurer les environnements** :
-   Assurez-vous que les fichiers `.env` existent dans chaque service (`services/gateway/.env`, `services/identity-service/.env`, etc.).
-3. **Lancer l'infrastructure** :
-   ```bash
-   docker-compose up -d
-   ```
-
-## Commandes Docker Essentielles
-
-### Gestion des containers
-- **Démarrer tous les services** : `docker-compose up -d`
-- **Arrêter tous les services** : `docker-compose down`
-- **Reconstruire un service spécifique** : `docker-compose up -d --build <service_name>`
-- **Voir les logs** : `docker-compose logs -f <service_name>`
-
-### Base de données & Migrations
-- **Identité (Laravel)** :
-  ```bash
-  # Créer la DB (si nécessaire la première fois)
-  docker exec -it gesco_postgres psql -U admin -c "CREATE DATABASE gesco_identity;"
-  
-  # Lancer les migrations
-  docker-compose exec identity-service php artisan migrate
-  ```
-- **Inventory (NestJS/TypeORM)** :
-  *(Les migrations sont généralement automatiques via `synchronize: true` en développement)*
-  ```bash
-  # Créer la DB (si nécessaire)
-  docker exec -it gesco_postgres psql -U admin -c "CREATE DATABASE gesco_inventory;"
-  ```
-
-### Troubleshooting
-- **Conflit de port 5432 (Postgres)** :
-  Si vous avez une erreur d'authentification ou de port déjà utilisé, vérifiez qu'aucun autre Postgres local ou container ne tourne :
-  ```bash
-  docker stop ms_pgsql # (Exemple de container conflictuel courant)
-  docker-compose up -d postgres
-  ```
-
-## Accès aux Services
-- **Gateway API** : `http://localhost:3000`
-- **Identity API (via Gateway)** : `http://localhost:3000/auth/*`
-- **Inventory API (via Gateway)** : `http://localhost:3000/inventory/*`
-- **MailDev** : `http://localhost:10080` (Interface de capture d'emails)
+> **Gestion Commerciale Complète** — Enterprise-grade ERP system built with a polyglot microservices architecture.
 
 ---
-*Documentation générée pour faciliter l'onboarding des nouveaux développeurs.*
->>>>>>> 7e165ffac1ed83322355b04f1f99e7d03d785ae8
+
+## 📐 Architecture Overview
+
+```
+                    ┌─────────────────┐
+                    │   API Gateway   │ (NestJS - port 3000)
+                    │   JWT + Proxy   │
+                    └───────┬─────────┘
+                            │
+         ┌──────────────────┼──────────────────────┐
+         │                  │                      │
+  ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼───────────┐
+  │  Identity   │   │  Inventory  │   │   Spring Boot Cloud   │
+  │  (Laravel)  │   │  (NestJS)   │   │  Sales │ Notif │ GED  │
+  │  port 8000  │   │  port 3001  │   │  8083  │ 8084  │ 8085 │
+  └──────┬──────┘   └──────┬──────┘   └───────────┬───────────┘
+         │                  │                      │
+         └──────────────────┼──────────────────────┘
+                            │
+         ┌──────────────────┼──────────────────────┐
+         │                  │                      │
+  ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼──────┐
+  │  PostgreSQL │   │  RabbitMQ   │   │  MinIO (S3)      │
+  │  port 5432  │   │  port 5672  │   │  port 9000/9001  │
+  └─────────────┘   └─────────────┘   └──────────────────┘
+```
+
+### Infrastructure Services
+| Service | Technology | Port | Role |
+|---------|-----------|------|------|
+| **Discovery Server** | Spring Cloud Eureka | 8761 | Service registry & discovery |
+| **Config Server** | Spring Cloud Config | 8888 | Centralized configuration (native profile) |
+
+### Business Services
+| Service | Technology | Port | Role |
+|---------|-----------|------|------|
+| **Identity Service** | Laravel (PHP) | 8000 | Auth, users, roles, JWT |
+| **Gateway** | NestJS | 3000 | API proxy, JWT validation, routing |
+| **Inventory Service** | NestJS + TypeORM | 3001 | Products, categories, stock |
+| **Sales Service** | Spring Boot + JPA | 8083 | Sales, invoicing, events |
+| **Notification Service** | Spring Boot + RabbitMQ | 8084 | Email, SMS, push notifications |
+| **Document Service (GED)** | Spring Boot + JasperReports | 8085 | Folders, documents, versioning, PDF |
+
+### Infrastructure
+| Service | Technology | Port | Role |
+|---------|-----------|------|------|
+| **PostgreSQL** | PostgreSQL 15 | 5432 | Relational database |
+| **MongoDB** | MongoDB | 27017 | Document storage (analytics) |
+| **RabbitMQ** | RabbitMQ | 5672/15672 | Async messaging |
+| **Redis** | Redis | 6379 | Caching & sessions |
+| **MinIO** | MinIO (S3) | 9000/9001 | File storage (GED) |
+
+---
+
+## 🏗️ Architecture Pattern: Clean Architecture + DDD
+
+All business services follow the same layered structure:
+
+```
+service-*/
+├── core/
+│   ├── domain/
+│   │   ├── model/       # Entities (pure business logic, no framework)
+│   │   └── port/        # Interfaces (repositories, storage, events)
+│   └── application/
+│       ├── dto/          # Request/Response DTOs
+│       └── usecase/      # Business use cases
+└── infrastructure/
+    ├── adapters/
+    │   ├── persistence/  # JPA entities, repositories, adapters
+    │   ├── messaging/    # RabbitMQ publishers/listeners
+    │   ├── storage/      # MinIO adapter
+    │   └── rest/         # REST controllers
+    └── config/           # Spring beans, RabbitMQ, MinIO configs
+```
+
+---
+
+## 🔄 Inter-Service Communication
+
+### Async (Event-Driven via RabbitMQ)
+- `sale.created` → **Notification Service** (sends confirmation)
+- `sale.created` → **Document Service** (generates PDF invoice via JasperReports)
+
+### Sync (REST via Gateway)
+- All external API calls go through the **Gateway** (`http://localhost:3000`)
+- Gateway proxies to internal services and validates JWT
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Clone the project
+git clone https://github.com/azigani/laravel_microservices.git
+cd laravel_microservices
+
+# 2. Start all services
+docker-compose up -d
+
+# 3. Access services
+# Gateway:        http://localhost:3000
+# Eureka:         http://localhost:8761
+# Config Server:  http://localhost:8888
+# RabbitMQ UI:    http://localhost:15672 (guest/guest)
+# MinIO Console:  http://localhost:9001 (minioadmin/minioadmin)
+```
+
+---
+
+## 🌿 Git Workflow (Team Standards)
+
+```
+main ─── dev ─── feature/xxx
+              └── feature/yyy
+```
+
+1. **Branch** from `dev`: `git checkout -b feature/my-feature`
+2. **Commit** with Conventional Commits: `feat(sales): add invoice generation`
+3. **Push** feature branch: `git push -u origin feature/my-feature`
+4. **Merge** into `dev`: `git checkout dev && git merge feature/my-feature`
+5. **Push** `dev`: `git push origin dev`
+
+### Commit Convention
+| Prefix | Usage |
+|--------|-------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code restructure |
+| `docs` | Documentation |
+| `chore` | Build/config changes |
+
+---
+
+## 📁 Databases
+
+| Database | Service | Engine |
+|----------|---------|--------|
+| `gesco_identity` | Identity Service | PostgreSQL |
+| `gesco_inventory` | Inventory Service | PostgreSQL |
+| `gesco_sales` | Sales Service | PostgreSQL |
+| `gesco_document` | Document Service (GED) | PostgreSQL |
+| `gesco_notification` | Notification Service | PostgreSQL |
+
+All databases are auto-created by `docker/postgres/init.sql`.
+
+---
+
+## 📝 License
+
+Proprietary — GESCO ERP by Laramel.

@@ -98,6 +98,8 @@ services:
       JWT_EXPIRATION: 7d
       INVENTORY_SERVICE_URL: http://inventory-service:3001
       IDENTITY_SERVICE_URL: http://identity-service:8000
+      SALES_SERVICE_URL: http://service-sales:8083
+      DOCUMENT_SERVICE_URL: http://service-document:8085
     depends_on:
       - redis
       - rabbitmq
@@ -144,6 +146,42 @@ services:
       - postgres
       - rabbitmq
 
+  service-sales:
+    build:
+      context: ./services/service-sales
+      dockerfile: Dockerfile
+    container_name: gesco_sales_service
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/gesco_sales
+      DB_USER: admin
+      DB_PASS: password
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://discovery-server:8761/eureka
+    depends_on:
+      - postgres
+      - rabbitmq
+      - discovery-server
+
+  service-notification:
+    build:
+      context: ./services/service-notification
+      dockerfile: Dockerfile
+    container_name: gesco_notification_service
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/gesco_notification
+      DB_USER: admin
+      DB_PASS: password
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://discovery-server:8761/eureka
+    depends_on:
+      - postgres
+      - rabbitmq
+      - discovery-server
+
   service-document:
     build:
       context: ./services/service-document-ged
@@ -168,3 +206,4 @@ volumes:
   postgres_data:
   mongo_data:
   minio_data:
+

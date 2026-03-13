@@ -21,4 +21,14 @@ eureka:
 # Logging standard for all services (JSON-ready)
 logging:
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{correlationId}] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId}, %X{spanId}] %-5level %logger{36} - %msg%n"
+
+# Distributed Tracing (Micrometer + Zipkin)
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://zipkin:9411/api/v2/spans}
+

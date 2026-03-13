@@ -1,6 +1,9 @@
 spring:
   application:
     name: service-sales
+  # Import config from Config Server (falls back to local if unavailable)
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/gesco_sales}
     username: ${DB_USER:admin}
@@ -29,3 +32,28 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
     prefer-ip-address: true
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      documentService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 3
+
+# OpenFeign logging
+logging:
+  level:
+    com.gesco.sales.infrastructure.adapters.feign: DEBUG

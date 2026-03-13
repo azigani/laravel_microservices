@@ -182,6 +182,13 @@ services:
       - rabbitmq
       - discovery-server
 
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: gesco_zipkin
+    ports:
+      - "9411:9411"
+    restart: always
+
   service-document:
     build:
       context: ./services/service-document-ged

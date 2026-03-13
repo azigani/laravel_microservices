@@ -1,15 +1,29 @@
 server:
   port: 8761
 
+spring:
+  application:
+    name: discovery-server
+
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOSTNAME:localhost}
   client:
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    # Disable self-preservation for dev (enable in prod)
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
 
-spring:
-  application:
-    name: discovery-server
+# Actuator for health checks (used by docker-compose healthcheck)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

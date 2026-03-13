@@ -1,8 +1,9 @@
-feat(integration): wire all services together
+feat(discovery): enable distributed tracing and smart discovery
 
-- Add service-sales and service-notification to docker-compose
-- Update init.sql to create all 5 databases
-- Wire service-sales to Eureka + Config Server (pom.xml + application.yml)
-- Create Gateway proxy controllers for Sales, Document, Analytics
-- Add new service URLs to Gateway environment
-- Write comprehensive README with architecture diagram
+- Add Distributed Tracing (Micrometer + Zipkin) to all Java services
+- Add OpenFeign for smart service discovery via Eureka
+- Add Resilience4j circuit breakers for inter-service calls
+- Add Actuator health and metrics endpoints
+- Centralize all tracing and shared configurations in Config Server
+- Add Zipkin to docker-compose
+- Implement SystemCheckController in service-sales

@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Fournisseur de paiement Faso Arzeka (Simulation / Stub).
+ * Note : Ceci est une implémentation de test et ne communique pas avec les vraies API de Faso Arzeka.
+ */
 @Slf4j
 @Component
 public class FasoArzekaPaymentProvider implements PaymentProvider {

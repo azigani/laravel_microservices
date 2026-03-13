@@ -33,9 +33,9 @@ public class GenerateInvoiceUseCase {
     private final DocumentVersionRepository versionRepository;
     private final FileStoragePort fileStoragePort;
 
-    public DocumentResponseDto execute(UUID saleId, String customerName, double totalAmount) {
+    public DocumentResponseDto execute(UUID saleId, String customerName, double totalAmount, boolean isPaid) {
         try {
-            log.info("Generating invoice for sale: {} - customer: {}", saleId, customerName);
+            log.info("Generating invoice for sale: {} - customer: {} - isPaid: {}", saleId, customerName, isPaid);
 
             // 1. Load the JasperReports template (.jrxml) from classpath
             InputStream templateStream = new ClassPathResource("reports/invoice.jrxml").getInputStream();
@@ -48,6 +48,7 @@ public class GenerateInvoiceUseCase {
             params.put("TOTAL_AMOUNT", totalAmount);
             params.put("INVOICE_DATE", LocalDateTime.now().toString());
             params.put("COMPANY_NAME", "GESCO ERP");
+            params.put("IS_PAID", isPaid);
 
             // 3. Generate PDF bytes
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, params, new JREmptyDataSource());

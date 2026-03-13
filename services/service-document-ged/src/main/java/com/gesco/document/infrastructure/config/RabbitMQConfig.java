@@ -10,12 +10,20 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String SALES_EXCHANGE = "sales.exchange";
+    public static final String PAYMENT_EXCHANGE = "payment.exchange";
     public static final String DOCUMENT_QUEUE = "document.sale.created.queue";
+    public static final String PAYMENT_COMPLETED_DOCUMENT_QUEUE = "document.payment.completed.queue";
     public static final String SALE_CREATED_ROUTING_KEY = "sale.created";
+    public static final String PAYMENT_COMPLETED_ROUTING_KEY = "payment.completed";
 
     @Bean
     public TopicExchange salesExchange() {
         return new TopicExchange(SALES_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange paymentExchange() {
+        return new TopicExchange(PAYMENT_EXCHANGE);
     }
 
     @Bean
@@ -24,8 +32,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue paymentCompletedDocumentQueue() {
+        return QueueBuilder.durable(PAYMENT_COMPLETED_DOCUMENT_QUEUE).build();
+    }
+
+    @Bean
     public Binding documentBinding(Queue documentQueue, TopicExchange salesExchange) {
         return BindingBuilder.bind(documentQueue).to(salesExchange).with(SALE_CREATED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding paymentCompletedDocumentBinding(Queue paymentCompletedDocumentQueue, TopicExchange paymentExchange) {
+        return BindingBuilder.bind(paymentCompletedDocumentQueue).to(paymentExchange).with(PAYMENT_COMPLETED_ROUTING_KEY);
     }
 
     @Bean

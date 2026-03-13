@@ -31,7 +31,7 @@ public class SaleCreatedEventListener {
             String customerName = "Client ID: " + event.getCustomerId();
             double totalAmount = event.getTotalAmount() != null ? event.getTotalAmount().doubleValue() : 0.0;
 
-            generateInvoiceUseCase.execute(saleId, customerName, totalAmount);
+            generateInvoiceUseCase.execute(saleId, customerName, totalAmount, false);
             log.info("Invoice successfully triggered for sale: {}", saleId);
 
         } catch (Exception e) {

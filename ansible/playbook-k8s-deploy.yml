@@ -1,0 +1,30 @@
+---
+- name: Deploy Gesco Microservices to Kubernetes
+  hosts: localhost # Update with actual k8s control plane or jump host
+  become: no
+  vars:
+    k8s_manifests_dir: "../k8s"
+  
+  tasks:
+    - name: Create gesco namespace
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ k8s_manifests_dir }}/core/00-namespace-config.yml"
+
+    # Additional deployment tasks would go here, applying manifests from k8s directory.
+    - name: Apply Core manifests
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ item }}"
+      loop:
+        - "{{ k8s_manifests_dir }}/core/00-namespace-config.yml"
+        - "{{ k8s_manifests_dir }}/core/config-server-deployment.yml"
+        - "{{ k8s_manifests_dir }}/core/discovery-server-deployment.yml"
+        - "{{ k8s_manifests_dir }}/core/api-gateway-deployment.yml"
+
+    - name: Apply Business manifests
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ item }}"
+      loop:
+        - "{{ k8s_manifests_dir }}/business/pricing-service-deployment.yml"

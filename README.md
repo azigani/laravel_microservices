@@ -86,6 +86,53 @@ Toutes les requêtes passent par la **Gateway** qui vérifie le JWT (via Identit
 
 ---
 
-## 📈 Développement & Workflow Git
--   **Branche principale** : `dev` (Intégration continue).
--   **Features** : Toujours créer une branche `feature/nom-de-la-feature` et fusionner vers `dev` après validation.
+---
+
+## 📈 DevOps & Observability
+
+Pour assurer une qualité de code et une surveillance de niveau production, le projet inclut une stack DevOps complète.
+
+### 1. Code Quality (SonarQube)
+- **Lancement** : `./gesco.bat devops` ou `docker-compose -f docker/docker-compose.devops.yml up -d sonarqube`
+- **Accès** : [http://localhost:9000](http://localhost:9000) (admin/admin)
+- **Analyse** : Exécutez `mvn sonar:sonar` à la racine pour envoyer les rapports.
+
+### 2. Monitoring (Prometheus & Grafana)
+- **Prometheus** : [http://localhost:9090](http://localhost:9090) - Collecte les métriques de chaque microservice.
+- **Grafana** : [http://localhost:3000](http://localhost:3000) (admin/admin) - Tableaux de bord pré-configurés pour Spring Boot.
+
+### 3. Orchestration (Kubernetes)
+Les manifestes se trouvent dans le dossier `k8s/`.
+```bash
+kubectl apply -f k8s/core/
+kubectl apply -f k8s/business/
+```
+
+### 4. Automatisation (Ansible)
+Déploiement automatisé :
+```bash
+cd ansible
+ansible-playbook -i hosts.ini playbook-k8s-deploy.yml
+```
+
+---
+
+## 🛡️ Git Workflow Professionnel
+
+Nous suivons un workflow strict pour garantir la stabilité :
+
+1.  **Main** : Code stable et prêt pour la production.
+2.  **Develop** : Branche d'intégration pour les fonctionnalités terminées.
+3.  **Feature/** : Toute nouvelle fonctionnalité doit avoir sa branche (ex: `feature/pricing-service`).
+4.  **Commit Message Standard (Conventional Commits)** :
+    - `feat(scope): ...` pour une nouvelle fonctionnalité.
+    - `fix(scope): ...` pour une correction de bug.
+    - `chore(devops): ...` pour les changements d'infrastructure.
+
+---
+
+## 📈 État des Communications Inter-services (Feign)
+
+La communication via **Spring Cloud OpenFeign** est centralisée dans les packages `infrastructure/adapters/feign`.
+- **Gestion des Erreurs** : Utilisation de `ErrorDecoder` personnalisé.
+- **Résilience** : (En cours) Intégration de **Resilience4j** pour les Circuit Breakers.

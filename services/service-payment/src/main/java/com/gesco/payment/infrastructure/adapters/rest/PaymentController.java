@@ -1,6 +1,7 @@
 package com.gesco.payment.infrastructure.adapters.rest;
 
 import com.gesco.payment.core.application.usecase.PaymentService;
+import com.gesco.payment.core.domain.model.Invoice;
 import com.gesco.payment.core.domain.model.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

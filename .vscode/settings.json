@@ -1,0 +1,18 @@
+{
+    "intelephense.environment.phpVersion": "8.2.0",
+    "intelephense.files.exclude": [
+        "**/vendor/**",
+        "**/node_modules/**",
+        "**/target/**",
+        "**/.git/**"
+    ],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/target": true
+    },
+    "search.exclude": {
+        "**/vendor": true,
+        "**/node_modules": true,
+        "**/target": true
+    }
+}

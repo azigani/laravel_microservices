@@ -31,8 +31,8 @@ Le système est composé de plusieurs microservices polyglottes (Spring Boot, Ne
 
 ### 2. Clonage et Configuration
 ```bash
-git clone https://github.com/azigani/laravel_microservices.git
-cd laramel_microservices
+git clone https://github.com/azigani/microservices_laravel_springboot_nestjs.git
+cd microservices_laravel_springboot_nestjs
 ```
 
 ### 3. Lancement avec CLI "Expert" (Recommandé)

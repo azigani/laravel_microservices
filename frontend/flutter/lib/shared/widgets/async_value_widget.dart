@@ -1,0 +1,34 @@
+import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+class AsyncValueWidget<T> extends StatelessWidget {
+  const AsyncValueWidget({
+    super.key,
+    required this.value,
+    required this.data,
+    this.loading,
+    this.error,
+  });
+
+  final AsyncValue<T> value;
+  final Widget Function(T) data;
+  final Widget Function()? loading;
+  final Widget Function(Object, StackTrace)? error;
+
+  @override
+  Widget build(BuildContext context) {
+    return value.when(
+      data: data,
+      error: error ??
+          (e, st) => Center(
+                child: Text(
+                  e.toString(),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.red,
+                      ),
+                ),
+              ),
+      loading: loading ?? () => const Center(child: CircularProgressIndicator()),
+    );
+  }
+}

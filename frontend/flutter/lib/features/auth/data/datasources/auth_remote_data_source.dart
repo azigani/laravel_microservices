@@ -34,7 +34,7 @@ class AuthRemoteDataSource {
 
   Future<User> getMe(String token) async {
     try {
-      final response = await _dio.get('/auth/me', 
+      final response = await _dio.get('/auth/me',
         options: Options(headers: {'Authorization': 'Bearer $token'})
       );
       return User.fromJson(response.data);
